@@ -43,9 +43,7 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -b update-index
           git commit -m "Auto-update index.json"
-          git push origin update-index --force
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
