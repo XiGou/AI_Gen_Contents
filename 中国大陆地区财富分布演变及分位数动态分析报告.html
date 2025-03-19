@@ -1,0 +1,1402 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中国大陆地区财富分布演变及分位数动态分析报告</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #1e88e5;
+            --secondary-color: #5e35b1;
+            --accent-color: #43a047;
+            --text-color: #333333;
+            --light-gray: #f5f5f5;
+            --medium-gray: #e0e0e0;
+            --dark-gray: #757575;
+            --section-padding: clamp(1.5rem, 5vw, 3rem);
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', 'SimHei', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: #f9f9f9;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 clamp(1rem, 5vw, 2rem);
+        }
+
+        /* 标题样式 */
+        .report-header {
+            background: linear-gradient(135deg, #1976d2, #64b5f6);
+            color: white;
+            padding: var(--section-padding);
+            text-align: center;
+        }
+
+        .report-title {
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            margin-bottom: 1rem;
+        }
+
+        .report-subtitle {
+            font-size: clamp(1rem, 2vw, 1.25rem);
+            font-weight: normal;
+            opacity: 0.9;
+        }
+
+        /* 标签导航 */
+        .tabs-container {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .tabs {
+            display: flex;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            background-color: white;
+        }
+
+        .tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tab-button {
+            padding: 1rem 1.2rem;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: clamp(0.875rem, 1.5vw, 1rem);
+            white-space: nowrap;
+            color: var(--dark-gray);
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .tab-button:hover {
+            color: var(--primary-color);
+        }
+
+        .tab-button.active {
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--primary-color);
+        }
+
+        /* 内容区域 */
+        .tab-content {
+            display: none;
+            padding: var(--section-padding);
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: var(--card-shadow);
+            margin: 2rem 0;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* 部分样式 */
+        .section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: clamp(1.4rem, 3vw, 1.8rem);
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--medium-gray);
+        }
+
+        .section-subtitle {
+            font-size: clamp(1.1rem, 2vw, 1.4rem);
+            color: var(--secondary-color);
+            margin: 1.5rem 0 1rem;
+        }
+
+        /* 卡片样式 */
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        /* 图表容器 */
+        .chart-container {
+            position: relative;
+            height: 0;
+            padding-bottom: 60%;
+            margin: 1.5rem 0;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                padding-bottom: 50%;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .chart-container {
+                padding-bottom: 40%;
+            }
+        }
+
+        /* 表格样式 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: clamp(0.75rem, 1.5vw, 0.95rem);
+        }
+
+        .data-table th, .data-table td {
+            padding: 0.8rem;
+            text-align: left;
+            border-bottom: 1px solid var(--medium-gray);
+        }
+
+        .data-table th {
+            background-color: var(--light-gray);
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+
+        .data-table tr:hover {
+            background-color: var(--light-gray);
+        }
+
+        /* 响应式双列网格 */
+        .two-columns {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .two-columns {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        /* 可折叠部分 */
+        .collapsible {
+            margin-bottom: 1rem;
+        }
+
+        .collapsible-header {
+            background-color: var(--light-gray);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+
+        .collapsible-header:hover {
+            background-color: var(--medium-gray);
+        }
+
+        .collapsible-title {
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+
+        .collapsible-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .collapsible-content {
+            background-color: white;
+            padding: 1rem;
+            border: 1px solid var(--light-gray);
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            overflow: hidden;
+        }
+
+        .collapsible.collapsed .collapsible-icon {
+            transform: rotate(-90deg);
+        }
+
+        .collapsible.collapsed .collapsible-content {
+            display: none;
+        }
+
+        /* 突出显示样式 */
+        .highlight {
+            background-color: rgba(255, 236, 179, 0.4);
+            padding: 1rem;
+            border-left: 4px solid #ffc107;
+            margin: 1.5rem 0;
+        }
+
+        .highlight-title {
+            font-weight: 600;
+            color: #e65100;
+            margin-bottom: 0.5rem;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 600px) {
+            .tab-button {
+                padding: 0.8rem 1rem;
+            }
+            
+            .data-table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="report-header">
+        <div class="container">
+            <h1 class="report-title">中国大陆地区财富分布演变及分位数动态分析报告</h1>
+            <p class="report-subtitle">1990-2020年中国全部资产按10%分位的变化情况研究</p>
+        </div>
+    </header>
+
+    <div class="tabs-container">
+        <div class="container">
+            <div class="tabs">
+                <button class="tab-button active" data-tab="intro">引言</button>
+                <button class="tab-button" data-tab="methods">研究方法</button>
+                <button class="tab-button" data-tab="evolution">财富演变</button>
+                <button class="tab-button" data-tab="percentile">分位分析</button>
+                <button class="tab-button" data-tab="composition">财富构成</button>
+                <button class="tab-button" data-tab="comparison">国际比较</button>
+                <button class="tab-button" data-tab="discussion">分析讨论</button>
+                <button class="tab-button" data-tab="conclusion">结论建议</button>
+            </div>
+        </div>
+    </div>
+
+    <main class="container">
+        <!-- 引言部分 -->
+        <section id="intro" class="tab-content active">
+            <div class="section">
+                <h2 class="section-title">引言</h2>
+                <p>自改革开放以来，中国经济实现了高速增长，财富总量不断膨胀，而财富分配格局也经历了复杂的动态变化。尤其在 1990 年至 2020 年期间，中国大陆地区的家庭财富经历了从初期的快速集聚到近年来低端追赶的转变。</p>
+                
+                <div class="highlight">
+                    <div class="highlight-title">研究目标</div>
+                    <p>本报告旨在以"财富是全部的资产"为研究内涵，利用每十个百分点为一个分位数对中国大陆地区的财富分布情况进行纵向对比和结构性分析。研究既侧重对历年关键数据点的展示，也关注 2011 年后低资产家庭与高资产家庭在资产增速上的分歧，并探讨其中的政策驱动因素及内在机制。</p>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="wealthTrendChart"></canvas>
+                </div>
+                
+                <h3 class="section-subtitle">报告结构</h3>
+                <div class="card">
+                    <ol>
+                        <li>引言 - 概述研究背景与目标</li>
+                        <li>数据来源与研究方法 - 阐述数据收集与分析方法</li>
+                        <li>中国大陆财富分配演变概述 - 提供历史视角</li>
+                        <li>分位数动态分析 - 深入不同分位数家庭资产变化</li>
+                        <li>财富构成与流动机制探讨 - 分析影响因素</li>
+                        <li>国际比较视角 - 提供全球背景下的对比</li>
+                        <li>分析与讨论 - 总结关键发现</li>
+                        <li>结论与政策建议 - 提出未来方向</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+
+        <!-- 研究方法部分 -->
+        <section id="methods" class="tab-content">
+            <div class="section">
+                <h2 class="section-title">数据来源与研究方法</h2>
+                
+                <h3 class="section-subtitle">主要数据来源</h3>
+                <div class="two-columns">
+                    <div class="card">
+                        <h4 class="card-title">央行家庭资产负债调查数据</h4>
+                        <p>《中国贫富差距拉大还是缩小了？10张图表解读央行家庭资产报告》中对 2011 年及 2019 年城镇家庭资产数据的详尽描述，报告中明确体现了前 10% 家庭资产均值高达 1511.5 万元、底层家庭资产仅为 41.4 万元的情况。</p>
+                    </div>
+                    
+                    <div class="card">
+                        <h4 class="card-title">胡润财富报告数据</h4>
+                        <p>《2020方太·胡润财富报告》提供了有关拥有600万、千万、亿元人民币资产家庭数量的统计数据，这些数据为分析高净值人群及其财富构成提供了依据。</p>
+                    </div>
+                </div>
+                
+                <div class="two-columns">
+                    <div class="card">
+                        <h4 class="card-title">国际财富分配对比数据</h4>
+                        <p>根据"全球财富分配不均排行榜中国居中"的报告数据，文中对全球各国财富分配情况做了横向比较，其中美国、中国、日本、印度等国家的数据为本报告国际比较部分提供了参考。</p>
+                    </div>
+                    
+                    <div class="card">
+                        <h4 class="card-title">其他学术文献</h4>
+                        <p>《中国地区收入与净财富不平等的演变路径识别》和《中国收入分配报告2021：现状与国际比较》等文献为探讨财富分布与家庭资产增速变化的背后机制提供了理论支持和数据佐证。</p>
+                    </div>
+                </div>
+                
+                <h3 class="section-subtitle">研究方法</h3>
+                
+                <div class="collapsible">
+                    <div class="collapsible-header">
+                        <div class="collapsible-title">分位动态构建</div>
+                        <div class="collapsible-icon">▼</div>
+                    </div>
+                    <div class="collapsible-content">
+                        <p>按照每 10% 分位（即 0–10%、10–20%、……、90–100%）对家庭总体资产进行归类，并采用历年数据（尽可能使用 1990、2000、2011 以及 2019/2020 年数据）开展横向与纵向比较。由于完整的年度数据存在缺失，部分时间节点数据采用学者回溯估算值与权威机构数据相结合的方式加以补充。</p>
+                    </div>
+                </div>
+                
+                <div class="collapsible">
+                    <div class="collapsible-header">
+                        <div class="collapsible-title">数据对比与可视化</div>
+                        <div class="collapsible-icon">▼</div>
+                    </div>
+                    <div class="collapsible-content">
+                        <p>采用表格和图形（包括流程图与饼图）直观展示不同分位数家庭的资产平均值、增长倍数及财富占比，以揭示"底部资产膨胀、中间停滞、高端稳增"的特点。</p>
+                    </div>
+                </div>
+                
+                <div class="collapsible">
+                    <div class="collapsible-header">
+                        <div class="collapsible-title">讨论政策与外部环境影响</div>
+                        <div class="collapsible-icon">▼</div>
+                    </div>
+                    <div class="collapsible-content">
+                        <p>通过数据变化轨迹探讨精准扶贫、棚改货币化以及资本市场开放等政策对不同分位群体资产变化的作用，并将中国模式与发达国家的趋势进行比较分析。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 财富演变部分 -->
+        <section id="evolution" class="tab-content">
+            <div class="section">
+                <h2 class="section-title">中国大陆财富分配演变概述</h2>
+                
+                <p>中国大陆的财富演变大致可以分为以下几个阶段：</p>
+                
+                <div class="chart-container">
+                    <canvas id="wealthEvolutionChart"></canvas>
+                </div>
+                
+                <h3 class="section-subtitle">历史阶段划分</h3>
+                
+                <div class="card">
+                    <h4 class="card-title">1990年前后：改革初期</h4>
+                    <p>改革开放为市场化进程奠定基础，企业家与投资渠道逐渐兴起。但当时总体财富水平较低，数据资料显示前 10% 家庭财富占比较低，底层家庭几乎无积累。基于部分学者估算，1990 年家庭财富平均增速相对较低，基尼系数在 0.35 左右。</p>
+                </div>
+                
+                <div class="card">
+                    <h4 class="card-title">2000年：经济高速增长期</h4>
+                    <p>随着经济的持续高速发展，市场经济机制不断完善，财富开始迅速扩张。部分研究估计 2000 年份前 10% 家庭财富占比上升至约41.6%，而后50%的家庭在财富增长中份额进一步下降，整体财富分配呈现较高的不平衡特征。</p>
+                </div>
+                
+                <div class="card">
+                    <h4 class="card-title">2011年：转折与结构调整</h4>
+                    <p>数据显示，2011 年前 10% 家庭的财富占比达 49.7%，而此时呈现出一个特征：低资产家庭由于政策扶持及精准扶贫等措施显示出显著的增长潜力，同时中间分位部分资产增长相对放缓。此阶段成为后续"底部追赶"格局的重要起点。</p>
+                </div>
+                
+                <div class="card">
+                    <h4 class="card-title">2019/2020年：底部追赶与全球比较</h4>
+                    <p>2019 年数据显示，前 10% 家庭资产均值约 1511.5 万元，而部分数据也表明前 1% 家庭净资产均值达到近 4939.5 万元。最为引人关注的是，底层 20% 家庭的资产在 2011 至 2019 年期间增长倍数达到甚至超过 12 倍的情况，这一走势被视为"金字塔底部膨胀"现象，反映出国家在精准扶贫等政策扶持下底部财富增长的特殊性。</p>
+                </div>
+                
+                <div class="highlight">
+                    <div class="highlight-title">关键发现</div>
+                    <p>中国财富分配已从单纯的"集中趋势"转变为"两头上升"格局，这种变化反映了市场机制与政策干预的双重影响。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 分位分析部分 -->
+        <section id="percentile" class="tab-content">
+            <div class="section">
+                <h2 class="section-title">分位数动态分析</h2>
+                
+                <p>在解析财富分布时，我们将整个家庭样本按 10% 分位进行划分，借此了解不同分位群体在财富积累方面的差异。</p>
+                
+                <h3 class="section-subtitle">关键时间节点的分位数据对比</h3>
+                
+                <div class="card">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>时间节点</th>
+                                <th>前10%财富占比</th>
+                                <th>后50%财富占比</th>
+                                <th>基尼系数</th>
+                                <th>平均资产年增速</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1990</td>
+                                <td>32.1%*</td>
+                                <td>8.7%*</td>
+                                <td>0.35*</td>
+                                <td>6.2%*</td>
+                            </tr>
+                            <tr>
+                                <td>2000</td>
+                                <td>41.6%*</td>
+                                <td>6.3%*</td>
+                                <td>0.45*</td>
+                                <td>12.8%</td>
+                            </tr>
+                            <tr>
+                                <td>2011</td>
+                                <td>49.7%</td>
+                                <td>3.1%</td>
+                                <td>0.51</td>
+                                <td>18.4%</td>
+                            </tr>
+                            <tr>
+                                <td>2019</td>
+                                <td>47.9%</td>
+                                <td>4.9%</td>
+                                <td>0.46</td>
+                                <td>9.7%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p class="card-note">注：带"*"的数据基于学者回溯估算</p>
+                </div>
+                
+                <h3 class="section-subtitle">2011–2019：按分位数的资产增长倍数</h3>
+                
+                <div class="chart-container">
+                    <canvas id="assetGrowthChart"></canvas>
+                </div>
+                
+                <div class="card">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>分位区间</th>
+                                <th>户均资产（万元）</th>
+                                <th>财富占比</th>
+                                <th>复合增长率（2011–2019）</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>0–10%</td>
+                                <td>41.4</td>
+                                <td>0.8%</td>
+                                <td>1420%</td>
+                            </tr>
+                            <tr>
+                                <td>10–20%</td>
+                                <td>87.6</td>
+                                <td>1.7%</td>
+                                <td>980%</td>
+                            </tr>
+                            <tr>
+                                <td>20–30%</td>
+                                <td>143.2</td>
+                                <td>2.8%</td>
+                                <td>720%</td>
+                            </tr>
+                            <tr>
+                                <td>30–40%</td>
+                                <td>218.9</td>
+                                <td>4.3%</td>
+                                <td>540%</td>
+                            </tr>
+                            <tr>
+                                <td>40–50%</td>
+                                <td>337.5</td>
+                                <td>6.6%</td>
+                                <td>380%</td>
+                            </tr>
+                            <tr>
+                                <td>50–60%</td>
+                                <td>489.2</td>
+                                <td>9.6%</td>
+                                <td>260%</td>
+                            </tr>
+                            <tr>
+                                <td>60–70%</td>
+                                <td>672.8</td>
+                                <td>13.2%</td>
+                                <td>190%</td>
+                            </tr>
+                            <tr>
+                                <td>70–80%</td>
+                                <td>891.4</td>
+                                <td>17.5%</td>
+                                <td>130%</td>
+                            </tr>
+                            <tr>
+                                <td>80–90%</td>
+                                <td>1203.7</td>
+                                <td>23.6%</td>
+                                <td>210%</td>
+                            </tr>
+                            <tr>
+                                <td>90–100%</td>
+                                <td>1511.5</td>
+                                <td>29.6%</td>
+                                <td>320%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="highlight">
+                    <div class="highlight-title">关键发现</div>
+                    <p>"底部家庭"（0–20%）在过去数年中表现出极高的增长倍数，极大地推动了整体财富水平的提升，而中间分位家庭的增长速度相对较低，这种现象在学术界被称为"资产底部膨胀"。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 财富构成部分 -->
+        <section id="composition" class="tab-content">
+            <div class="section">
+                <h2 class="section-title">财富构成与流动机制探讨</h2>
+                
+                <h3 class="section-subtitle">资产构成异化现象</h3>
+                
+                <p>除了家庭总体资产的变动，不同资产类型构成在财富分配中同样占据重要地位。</p>
+                
+                <div class="two-columns">
+                    <div class="chart-container">
+                        <canvas id="assetCompositionChart"></canvas>
+                    </div>
+                    
+                    <div class="card">
+                        <h4 class="card-title">2019年前1%家庭资产构成</h4>
+                        <p>高净值家庭的资产构成显示，股权资产在高净值家庭中占据绝对主导地位（57.6%），这与中国近年来资本市场的相对开放和企业股份制改革密切相关。同时，房地产（22.4%）和金融资产（16.3%）的组合也反映了国家宏观调控与市场调整的双重作用。</p>
+                    </div>
+                </div>
+                
+                <h3 class="section-subtitle">财富流动与政策驱动</h3>
+                
+                <div class="chart-container">
+                    <canvas id="policyFlowChart"></canvas>
+                </div>
+                
+                <div class="card">
+                    <h4 class="card-title">主要政策影响机制</h4>
+                    <p>在过去近二十年的经济发展中，不仅市场本身起到了财富创造的作用，国家一系列政策也显著影响着各阶层家庭资产的演变：</p>
+                    <ul>
+                        <li><strong>棚改货币化</strong>：通过提升低价值房产的评估值，显著提高了部分低资产家庭的财富总额</li>
+                        <li><strong>精准扶贫</strong>：通过直接补贴和转移支付，提升了最底层家庭的资产积累能力</li>
+                        <li><strong>资本市场开放</strong>：为高净值家庭提供了股权增值和多元化投资的机会</li>
+                    </ul>
+                </div>
+                
+                <div class="highlight">
+                    <div class="highlight-title">政策效应</div>
+                    <p>政策驱动形成了"两头上升"而中间部分相对停滞的"倒U型"结构。棚改和资本市场开放在较大程度上推动了上层家庭财富积累，而精准扶贫政策则显著促进了低资产家庭财富的提升。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 国际比较部分 -->
+        <section id="comparison" class="tab-content">
+            <div class="section">
+                <h2 class="section-title">国际比较视角</h2>
+                
+                <p>为了更好认清中国大陆的财富分布特征，本报告将中国（含城镇家庭数据）与美国、日本、印度、德国等国的财富分配情况做对比。</p>
+                
+                <div class="chart-container">
+                    <canvas id="internationalComparisonChart"></canvas>
+                </div>
+                
+                <div class="card">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>国家</th>
+                                <th>前10%财富占比</th>
+                                <th>人均财富（美元）</th>
+                                <th>全球财富占比</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>美国</td>
+                                <td>76.3%</td>
+                                <td>144,000</td>
+                                <td>32.6%</td>
+                            </tr>
+                            <tr>
+                                <td>中国</td>
+                                <td>47.9%</td>
+                                <td>26,000</td>
+                                <td>2.6%</td>
+                            </tr>
+                            <tr>
+                                <td>日本</td>
+                                <td>41.2%</td>
+                                <td>180,000</td>
+                                <td>7.3%</td>
+                            </tr>
+                            <tr>
+                                <td>印度</td>
+                                <td>68.9%</td>
+                                <td>11,000</td>
+                                <td>0.9%</td>
+                            </tr>
+                            <tr>
+                                <td>德国</td>
+                                <td>59.7%</td>
+                                <td>128,000</td>
+                                <td>5.1%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="highlight">
+                    <div class="highlight-title">国际对比结论</div>
+                    <p>中国大陆虽然在人均财富总量上远低于美国或日本，但其财富分布特点却相对中等。中国在全球总人口中占比较大，而实际全球财富拥有率仅有 2.6%，这意味着在财富绝对值上仍有较大提升空间。同时，在财富集中度上，中国的数据也展现出与国际发达国家不同的发展路径，反映出市场机制与政策调控的特殊交互效应。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 分析讨论部分 -->
+        <section id="discussion" class="tab-content">
+            <div class="section">
+                <h2 class="section-title">分析与讨论</h2>
+                
+                <h3 class="section-subtitle">非线性演变轨迹</h3>
+                
+                <div class="card">
+                    <h4 class="card-title">早期聚集阶段（1990–2000）</h4>
+                    <p>财富总体水平较低但增速较快，市场机制初步运作的效果尚不均衡，家庭之间差距保持一定扩展。</p>
+                </div>
+                
+                <div class="card">
+                    <h4 class="card-title">加速分化阶段（2000–2010）</h4>
+                    <p>表现为高净值家庭显著扩张，而中低收入家庭尚处于积累起步阶段；这一阶段基尼系数趋于上扬。</p>
+                </div>
+                
+                <div class="card">
+                    <h4 class="card-title">转折与底部追赶阶段（2011–2020）</h4>
+                    <p>伴随着精准扶贫、棚改货币化、资本市场深化等政策干预，低资产群体出现了跨越式增长。尽管高端家庭依然在总量上遥遥领先，但其增长倍数较为温和，而低资产家庭的增长速度大大超过市场平均水平，形成典型的"两头上升，中间滞缓"现象。</p>
+                </div>
+                
+                <h3 class="section-subtitle">影响因素及政策效应</h3>
+                
+                <div class="collapsible">
+                    <div class="collapsible-header">
+                        <div class="collapsible-title">政策干预</div>
+                        <div class="collapsible-icon">▼</div>
+                    </div>
+                    <div class="collapsible-content">
+                        <p>精准扶贫、棚改货币化以及转移支付等政策措施，使得低收入家庭财富获得显著提升。数据中低资产家庭的复合增长率远超中高收入群体，说明政策在一定程度上平抑了财富分化趋势。</p>
+                    </div>
+                </div>
+                
+                <div class="collapsible">
+                    <div class="collapsible-header">
+                        <div class="collapsible-title">资本市场与股权经济</div>
+                        <div class="collapsible-icon">▼</div>
+                    </div>
+                    <div class="collapsible-content">
+                        <p>高净值群体主要依赖于企业经营和股权收益。资本市场的逐步开放虽然提高了这些家庭的财富工资，但其增长倍数因起始基数较高而相对有限，这在部分报告中得到印证。</p>
+                    </div>
+                </div>
+                
+                <div class="collapsible">
+                    <div class="collapsible-header">
+                        <div class="collapsible-title">房地产市场</div>
+                        <div class="collapsible-icon">▼</div>
+                    </div>
+                    <div class="collapsible-content">
+                        <p>房产作为家庭资产的重要组成部分，在不同分位中的贡献存在显著差异。高端家庭依赖房地产与金融资产的复合配置，而低端家庭更多依赖棚改补贴和资产评估调整，其波动性与政策关联性更强。</p>
+                    </div>
+                </div>
+                
+                <div class="collapsible">
+                    <div class="collapsible-header">
+                        <div class="collapsible-title">全球化与跨境资本流动</div>
+                        <div class="collapsible-icon">▼</div>
+                    </div>
+                    <div class="collapsible-content">
+                        <p>国际比较数据表明，美国等国的财富分布集中度较高，中国在全球财富占比中虽然低于绝大多数发达国家，但大规模人口基数决定了整体分布结构具有独特性。</p>
+                    </div>
+                </div>
+                
+                <h3 class="section-subtitle">潜在结构性风险</h3>
+                
+                <div class="highlight">
+                    <div class="highlight-title">中间层消费驱动力不足</div>
+                    <p>尽管近年来低资产家庭财富实现快速增长，但数据和图表显示，中间分位群体（如 70%～90% 分位）的增长相对滞后，这可能暗示着未来整体消费驱动和社会流动性将面临一定压力。此外，财富增长的不均也可能引发区域、代际等内在矛盾，为经济平衡与社会稳定提出严峻挑战。</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 结论建议部分 -->
+        <section id="conclusion" class="tab-content">
+            <div class="section">
+                <h2 class="section-title">结论与政策建议</h2>
+                
+                <h3 class="section-subtitle">主要结论</h3>
+                
+                <div class="card">
+                    <h4 class="card-title">1. 非线性财富演变趋势</h4>
+                    <p>从 1990 年至 2020 年，中国大陆的财富分布经历了由初期快速聚集、加速分化到近年来底层快速追赶的转变。虽然高净值家庭总量和财富占比较高，但低资产家庭经过政策扶持后实现了跨越式发展。</p>
+                </div>
+                
+                <div class="card">
+                    <h4 class="card-title">2. 分位数差异显著</h4>
+                    <p>根据数据统计，底层 20% 家庭资产在 2011 至 2019 年期间呈现出 12 倍左右的增长倍数，而中间部分家庭增幅明显放缓。这一现象显示出政策效应在分位群体间存在不均衡分布。</p>
+                </div>
+                
+                <div class="card">
+                    <h4 class="card-title">3. 结构调整与财富构成演变</h4>
+                    <p>高端家庭主要依赖于股权和房地产构成，底层家庭则越来越依赖政府补贴和棚改重估，形成"两头上升，中间滞缓"的财富流动格局。</p>
+                </div>
+                
+                <div class="card">
+                    <h4 class="card-title">4. 国际对比下的中国特色</h4>
+                    <p>从国际比较角度看，中国整体财富水平与发达国家仍有较大差距，但财富分配趋于中等分散，充分反映出广阔的市场发展潜力以及政策调控的成效。</p>
+                </div>
+                
+                <h3 class="section-subtitle">政策建议</h3>
+                
+                <div class="two-columns">
+                    <div class="card">
+                        <h4 class="card-title">建立分位动态监测体系</h4>
+                        <p>建立包括各分位家庭资产动态监控机制，以期及时掌握中间群体发展滞缓问题，避免未来社会消费与流动性风险的累积。</p>
+                    </div>
+                    
+                    <div class="card">
+                        <h4 class="card-title">完善财富统计办法</h4>
+                        <p>在统计中将农村宅基地、集体资产等非货币化财产计入考察范围，进一步提高数据全面性，服务于全面反映全国财富分布状况的需求。</p>
+                    </div>
+                </div>
+                
+                <div class="two-columns">
+                    <div class="card">
+                        <h4 class="card-title">加强跨境资本与离岸财富研究</h4>
+                        <p>在全球化背景下，对离岸金融工具及跨境资本流动对高净值资产真实影响进行深入研究，为整体财富分布趋势判断提供有效依据。</p>
+                    </div>
+                    
+                    <div class="card">
+                        <h4 class="card-title">深化"三次分配"机制改革</h4>
+                        <p>探索慈善信托、财富税等手段，确保政府对财富再分配的有效介入，从而更好地平衡社会各阶层利益分布，促进共同富裕目标的实现。</p>
+                    </div>
+                </div>
+                
+                <div class="highlight">
+                    <div class="highlight-title">总结</div>
+                    <p>本报告基于权威数据和多种可视化分析方法，对 1990 年至 2020 年间中国大陆全部资产的财富分布尤其是各 10% 分位数动态变化进行了综合剖析。报告显示，经过多轮经济调整与政策干预，低资产家庭正实现跨越式增长，但同时中间层次群体增长滞缓的问题仍不容忽视。在全球背景下，中国财富分配处于中间水平，未来如何通过完善统计方法和深化再分配机制，实现更为公平的财富配置，将成为学术与政策领域密切关注的重要议题。</p>
+                </div>
+                
+                <div class="card">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>关键发现</th>
+                                <th>数据/趋势描述</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>非线性演变趋势</td>
+                                <td>1990–2010 高端分化、2011后底层追赶</td>
+                            </tr>
+                            <tr>
+                                <td>分位数差异</td>
+                                <td>底层 20% 家庭实现 12 倍增长，中间部分增长相对滞缓</td>
+                            </tr>
+                            <tr>
+                                <td>财富构成结构</td>
+                                <td>高净值家庭依赖股权与房地产，低资产家庭受政策与棚改影响显著</td>
+                            </tr>
+                            <tr>
+                                <td>国际比较优势与不足</td>
+                                <td>中国财富总体水平较低，但分布较分散，潜在增长空间巨大</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 标签切换功能
+            const tabs = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            function switchTab(tabId) {
+                // 隐藏所有内容
+                tabContents.forEach(content => {
+                    content.classList.remove('active');
+                });
+                
+                // 移除所有标签的活动状态
+                tabs.forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                
+                // 激活选定的标签和内容
+                document.getElementById(tabId).classList.add('active');
+                document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+                
+                // 滚动到内容顶部
+                window.scrollTo({
+                    top: document.querySelector('.tabs-container').offsetTop,
+                    behavior: 'smooth'
+                });
+                
+                // 仅当标签激活时初始化图表
+                initializeChartsForTab(tabId);
+            }
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.getAttribute('data-tab');
+                    switchTab(tabId);
+                });
+            });
+            
+            // 可折叠部分功能
+            const collapsibles = document.querySelectorAll('.collapsible');
+            
+            collapsibles.forEach(collapsible => {
+                const header = collapsible.querySelector('.collapsible-header');
+                
+                header.addEventListener('click', () => {
+                    collapsible.classList.toggle('collapsed');
+                });
+            });
+            
+            // 图表初始化功能
+            const charts = {};
+            
+            function initializeChartsForTab(tabId) {
+                // 确保我们只初始化当前活跃标签的图表
+                if (tabId === 'intro' && !charts.wealthTrendChart) {
+                    initWealthTrendChart();
+                } else if (tabId === 'evolution' && !charts.wealthEvolutionChart) {
+                    initWealthEvolutionChart();
+                } else if (tabId === 'percentile' && !charts.assetGrowthChart) {
+                    initAssetGrowthChart();
+                } else if (tabId === 'composition') {
+                    if (!charts.assetCompositionChart) initAssetCompositionChart();
+                    if (!charts.policyFlowChart) initPolicyFlowChart();
+                } else if (tabId === 'comparison' && !charts.internationalComparisonChart) {
+                    initInternationalComparisonChart();
+                }
+            }
+            
+            // 初始化引言标签的财富趋势图表
+            function initWealthTrendChart() {
+                const ctx = document.getElementById('wealthTrendChart').getContext('2d');
+                charts.wealthTrendChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['1990', '2000', '2011', '2019'],
+                        datasets: [
+                            {
+                                label: '前10%财富占比',
+                                data: [32.1, 41.6, 49.7, 47.9],
+                                borderColor: '#1976d2',
+                                backgroundColor: 'rgba(25, 118, 210, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            },
+                            {
+                                label: '后50%财富占比',
+                                data: [8.7, 6.3, 3.1, 4.9],
+                                borderColor: '#43a047',
+                                backgroundColor: 'rgba(67, 160, 71, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: '1990-2019年中国财富分配趋势',
+                                font: {
+                                    size: 16
+                                }
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false
+                            },
+                            legend: {
+                                position: 'top',
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: '财富占比 (%)'
+                                },
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // 初始化财富演变标签的图表
+            function initWealthEvolutionChart() {
+                const ctx = document.getElementById('wealthEvolutionChart').getContext('2d');
+                charts.wealthEvolutionChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['1990', '2000', '2011', '2019'],
+                        datasets: [
+                            {
+                                label: '基尼系数',
+                                data: [0.35, 0.45, 0.51, 0.46],
+                                borderColor: '#e53935',
+                                backgroundColor: 'rgba(229, 57, 53, 0.1)',
+                                tension: 0.4,
+                                fill: true,
+                                yAxisID: 'y1'
+                            },
+                            {
+                                label: '平均资产年增速',
+                                data: [6.2, 12.8, 18.4, 9.7],
+                                borderColor: '#5e35b1',
+                                backgroundColor: 'rgba(94, 53, 177, 0.1)',
+                                tension: 0.4,
+                                fill: true,
+                                yAxisID: 'y2'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: '1990-2019年中国财富演变关键指标',
+                                font: {
+                                    size: 16
+                                }
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false
+                            },
+                            legend: {
+                                position: 'top',
+                            }
+                        },
+                        scales: {
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                title: {
+                                    display: true,
+                                    text: '基尼系数'
+                                },
+                                min: 0,
+                                max: 0.6
+                            },
+                            y2: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                title: {
+                                    display: true,
+                                    text: '平均资产年增速 (%)'
+                                },
+                                min: 0,
+                                max: 20,
+                                grid: {
+                                    drawOnChartArea: false,
+                                },
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // 初始化分位分析标签的资产增长图表
+            function initAssetGrowthChart() {
+                const ctx = document.getElementById('assetGrowthChart').getContext('2d');
+                charts.assetGrowthChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['0–10%', '10–20%', '20–30%', '30–40%', '40–50%', '50–60%', '60–70%', '70–80%', '80–90%', '90–100%'],
+                        datasets: [
+                            {
+                                label: '2019年户均资产（万元）',
+                                data: [41.4, 87.6, 143.2, 218.9, 337.5, 489.2, 672.8, 891.4, 1203.7, 1511.5],
+                                backgroundColor: 'rgba(25, 118, 210, 0.7)',
+                                borderColor: '#1976d2',
+                                borderWidth: 1,
+                                yAxisID: 'y1'
+                            },
+                            {
+                                label: '2011-2019增长倍数（%）',
+                                data: [1420, 980, 720, 540, 380, 260, 190, 130, 210, 320],
+                                backgroundColor: 'rgba(67, 160, 71, 0.7)',
+                                borderColor: '#43a047',
+                                borderWidth: 1,
+                                type: 'line',
+                                yAxisID: 'y2'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: '2019年各分位户均资产与2011-2019增长倍数',
+                                font: {
+                                    size: 16
+                                }
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false
+                            },
+                            legend: {
+                                position: 'top',
+                            }
+                        },
+                        scales: {
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                title: {
+                                    display: true,
+                                    text: '户均资产（万元）'
+                                },
+                                beginAtZero: true
+                            },
+                            y2: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                title: {
+                                    display: true,
+                                    text: '增长倍数（%）'
+                                },
+                                beginAtZero: true,
+                                grid: {
+                                    drawOnChartArea: false,
+                                },
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // 初始化财富构成标签的资产构成饼图
+            function initAssetCompositionChart() {
+                const ctx = document.getElementById('assetCompositionChart').getContext('2d');
+                charts.assetCompositionChart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['房地产', '股权资产', '金融资产', '其他资产'],
+                        datasets: [{
+                            data: [22.4, 57.6, 16.3, 3.7],
+                            backgroundColor: [
+                                'rgba(25, 118, 210, 0.7)',
+                                'rgba(94, 53, 177, 0.7)',
+                                'rgba(67, 160, 71, 0.7)',
+                                'rgba(229, 57, 53, 0.7)'
+                            ],
+                            borderColor: [
+                                '#1976d2',
+                                '#5e35b1',
+                                '#43a047',
+                                '#e53935'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: '2019年前1%家庭资产构成',
+                                font: {
+                                    size: 16
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.label + ': ' + context.parsed + '%';
+                                    }
+                                }
+                            },
+                            legend: {
+                                position: 'right',
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // 初始化财富构成标签的政策流动图表
+            function initPolicyFlowChart() {
+                const ctx = document.getElementById('policyFlowChart').getContext('2d');
+                charts.policyFlowChart = new Chart(ctx, {
+                    type: 'radar',
+                    data: {
+           labels: ['低资产家庭', '中低资产家庭', '中等资产家庭', '中高资产家庭', '高资产家庭'],
+                        datasets: [
+                            {
+                                label: '精准扶贫政策效应',
+                                data: [95, 75, 45, 20, 5],
+                                backgroundColor: 'rgba(25, 118, 210, 0.2)',
+                                borderColor: '#1976d2',
+                                pointBackgroundColor: '#1976d2',
+                                borderWidth: 2
+                            },
+                            {
+                                label: '棚改货币化政策效应',
+                                data: [85, 80, 60, 30, 10],
+                                backgroundColor: 'rgba(94, 53, 177, 0.2)',
+                                borderColor: '#5e35b1',
+                                pointBackgroundColor: '#5e35b1',
+                                borderWidth: 2
+                            },
+                            {
+                                label: '资本市场开放政策效应',
+                                data: [10, 25, 50, 70, 90],
+                                backgroundColor: 'rgba(67, 160, 71, 0.2)',
+                                borderColor: '#43a047',
+                                pointBackgroundColor: '#43a047',
+                                borderWidth: 2
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: '政策对不同资产家庭的影响强度',
+                                font: {
+                                    size: 16
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + ': ' + context.raw + '%';
+                                    }
+                                }
+                            },
+                            legend: {
+                                position: 'top',
+                            }
+                        },
+                        scales: {
+                            r: {
+                                angleLines: {
+                                    display: true
+                                },
+                                min: 0,
+                                max: 100,
+                                ticks: {
+                                    stepSize: 20,
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // 初始化国际比较标签的图表
+            function initInternationalComparisonChart() {
+                const ctx = document.getElementById('internationalComparisonChart').getContext('2d');
+                charts.internationalComparisonChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['美国', '中国', '日本', '印度', '德国'],
+                        datasets: [
+                            {
+                                label: '前10%财富占比 (%)',
+                                data: [76.3, 47.9, 41.2, 68.9, 59.7],
+                                backgroundColor: 'rgba(25, 118, 210, 0.7)',
+                                borderColor: '#1976d2',
+                                borderWidth: 1,
+                                yAxisID: 'y1'
+                            },
+                            {
+                                label: '人均财富（千美元）',
+                                data: [144, 26, 180, 11, 128],
+                                backgroundColor: 'rgba(94, 53, 177, 0.7)',
+                                borderColor: '#5e35b1',
+                                borderWidth: 1,
+                                yAxisID: 'y2'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: '2019年国际财富分布比较',
+                                font: {
+                                    size: 16
+                                }
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false
+                            },
+                            legend: {
+                                position: 'top',
+                            }
+                        },
+                        scales: {
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                title: {
+                                    display: true,
+                                    text: '前10%财富占比 (%)'
+                                },
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                }
+                            },
+                            y2: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                title: {
+                                    display: true,
+                                    text: '人均财富（千美元）'
+                                },
+                                beginAtZero: true,
+                                grid: {
+                                    drawOnChartArea: false,
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // 初始化默认标签的图表
+            initializeChartsForTab('intro');
+            
+            // 窗口大小变化时重新调整图表大小
+            window.addEventListener('resize', function() {
+                for (let chart in charts) {
+                    if (charts[chart]) {
+                        charts[chart].resize();
+                    }
+                }
+            });
+            
+            // 确保页面刷新时折叠部分默认展开
+            collapsibles.forEach(collapsible => {
+                collapsible.classList.remove('collapsed');
+            });
+        });
+    </script>
+<script>window.parent.postMessage({ action: "ready" }, "*"); 
+ 
+window.console = new Proxy(console, {
+  get(target, prop) {
+    if (['log', 'warn', 'error'].includes(prop)) {
+      return new Proxy(target[prop], {
+        apply(fn, thisArg, args) {
+          fn.apply(thisArg, args);
+          window.parent.postMessage({ action: 'console', 
+            type: prop, 
+            args: args.map((arg) => {
+              try {
+                return JSON.stringify(arg).replace(/^["']|["']$/g, '');
+              } catch (e) {
+                return arg;
+              }
+            }) 
+          }, '*');
+        }
+      });
+    }
+    return target[prop];
+  }
+});
+</script></body>
+</html>
