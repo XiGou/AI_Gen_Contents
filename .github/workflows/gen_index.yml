@@ -49,7 +49,6 @@ jobs:
           git push origin update-index --force
 
       - name: Create Pull Request
-        if: env.changed == 'true'
         uses: peter-evans/create-pull-request@v6
         with:
           title: "Auto-update index.json"
