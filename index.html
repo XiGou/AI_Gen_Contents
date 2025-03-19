@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件索引</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/13.0.1/markdown-it.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        ul { list-style-type: none; }
+        a { text-decoration: none; color: blue; }
+        .folder { font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>文件索引</h1>
+    <ul id="file-list"></ul>
+    <div id="md-content"></div>
+    <script>
+        async function fetchFileList(path = '') {
+            try {
+                const response = await fetch(path + 'index.json');
+                const files = await response.json();
+                renderFileList(files, path);
+            } catch (error) {
+                console.error('无法加载文件列表:', error);
+            }
+        }
+
+        function renderFileList(files, basePath) {
+            const fileList = document.getElementById('file-list');
+            fileList.innerHTML = '';
+            files.forEach(file => {
+                const li = document.createElement('li');
+                const link = document.createElement('a');
+                link.href = basePath + file;
+                link.textContent = file;
+                link.addEventListener('click', async (event) => {
+                    if (file.endsWith('.md')) {
+                        event.preventDefault();
+                        loadMarkdown(basePath + file);
+                    }
+                });
+                li.appendChild(link);
+                fileList.appendChild(li);
+            });
+        }
+
+        async function loadMarkdown(filePath) {
+            const response = await fetch(filePath);
+            const text = await response.text();
+            const md = window.markdownit();
+            document.getElementById('md-content').innerHTML = md.render(text);
+        }
+
+        fetchFileList();
+    </script>
+</body>
+</html>
